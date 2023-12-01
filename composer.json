@@ -1,5 +1,5 @@
 {
-    "name": "sh-sabbir/faker-php-avatar",
+    "name": "KaanSecen/FakerPHP-Avatar",
     "description": "A provider for FakerPHP/Faker to generate Avatar Based on DiceBear",
     "version": "1.0.0",
     "keywords": [
