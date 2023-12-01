@@ -1,7 +1,7 @@
 {
     "name": "KaanSecen/FakerPHP-Avatar",
     "description": "A provider for FakerPHP/Faker to generate Avatar Based on DiceBear",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "keywords": [
         "faker",
         "avatar",
