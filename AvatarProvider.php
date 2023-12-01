@@ -4,75 +4,42 @@ namespace Sabbir\Faker;
 
 use Faker\Provider\Base as BaseProvider;
 use InvalidArgumentException;
-use RuntimeException;
 
 class AvatarProvider extends BaseProvider {
 
-    /**
-     * Generate the URL that will return a random image
-     *
-     * Set randomize to false to remove the random GET parameter at the end of the url.
-     *
-     * @param  string  $style
-     * @param  integer|null  $size
-     * @param  string|null  $slug
-     * @param  string|null  $bg
-     * @param  integer|null  $scale
-     * @param  bool|null  $flip
-     *
-     * @return string
-     * @throws \Exception
-     * @example 'https://avatars.dicebear.com/api/adventurer/:seed.svg'
-     *
-     */
+    public static function avatarUrl($style = "adventurer", $size = null, $slug = null, $options = []) {
+        $baseUrl = "https://api.dicebear.com/7.x/";
+        $url = $style;
 
-
-    public static function avatarUrl($style = "adventurer", $size = null, $slug = null, $bg = null, $scale = null, $flip = null) {
-        $baseUrl = "https://avatars.dicebear.com/api/";
-        $url = '';
-
-        if ($style) {
-            $url .= $style;
-        }
+        // Add format to the URL based on the provided options
+        $format = isset($options['format']) ? $options['format'] : 'svg';
+        $url .= "/$format";
 
         if ($slug) {
-            $url .= "/" . $slug . ".svg";
-        } else {
-            $url .= "/:seed.svg";
+            // Use the seed as part of the URL
+            $url .= "?seed=" . $slug;
         }
 
-        $options = [
+        // Merge additional options
+        $options = array_merge([
             'size' => $size,
-            'scale' => $scale,
-            'flip' => $flip
-        ];
+        ], $options);
 
-        if ($bg) {
-            $options = array('b' => $bg) + $options;
+        // Remove 'format' from the options as it's already handled in the URL
+        unset($options['format']);
+
+        $params = http_build_query(array_filter($options));
+
+        if ($params) {
+            $url .= $slug ? "&$params" : "?$params";
         }
 
-        $params = http_build_query($options);
-
-        if($params){
-            $url .= "?" . $params;
-        }
-
-        $url = $baseUrl . $url;
-
-        return $url;
+        return $baseUrl . $url;
     }
 
-    /**
-     * Download a remote random image to disk and return its location
-     *
-     * Requires curl, or allow_url_fopen to be on in php.ini.
-     *
-     * @example '/path/to/dir/13b73edae8443990be1aa8f1a483bc27.svg'
-     */
-
-    public static function avatar($dir = null, $fullPath = true, $style = "adventurer", $size = null, $slug = null, $bg = null, $scale = null, $flip = null) {
+    public static function avatar($dir = null, $fullPath = true, $style = "adventurer", $size = null, $slug = null, $options = []) {
         $dir = is_null($dir) ? sys_get_temp_dir() : $dir; // GNU/Linux / OS X / Windows compatible
-       
+
         // Validate directory path
         if (!is_dir($dir) || !is_writable($dir)) {
             throw new InvalidArgumentException(sprintf('Cannot write to directory "%s"', $dir));
@@ -81,10 +48,10 @@ class AvatarProvider extends BaseProvider {
         // Generate a random filename. Use the server address so that a file
         // generated at the same time on a different server won't have a collision.
         $name = md5(uniqid(empty($_SERVER['SERVER_ADDR']) ? '' : $_SERVER['SERVER_ADDR'], true));
-        $filename = $name . '.svg';
+        $filename = $name . '.' . (isset($options['format']) ? $options['format'] : 'svg');
         $filepath = $dir . DIRECTORY_SEPARATOR . $filename;
 
-        $url = static::avatarUrl($style, $size, $slug, $bg, $scale, $flip);
+        $url = static::avatarUrl($style, $size, $slug, $options);
 
         // save file
         if (function_exists('curl_exec')) {
@@ -106,7 +73,7 @@ class AvatarProvider extends BaseProvider {
             // use remote fopen() via copy()
             copy($url, $filepath);
         } else {
-            return new RuntimeException('The image formatter downloads an image from a remote HTTP server. Therefore, it requires that PHP can request remote hosts, either via cURL or fopen()');
+            throw new RuntimeException('The image formatter downloads an image from a remote HTTP server. Therefore, it requires that PHP can request remote hosts, either via cURL or fopen()');
         }
 
         return $fullPath ? $filepath : $filename;
