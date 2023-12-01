@@ -21,7 +21,7 @@
     "scripts": {
         "test": "phpunit"
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require": {
         "php": "^5.4 || ^7.0 || ^8.0",
         "fakerphp/faker": "~1",
